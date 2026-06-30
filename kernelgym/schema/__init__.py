@@ -3,6 +3,12 @@
 from .task import EvaluationTask, KernelEvaluationTask, ReferenceTimingTask
 from .simple_task import KernelSimpleTask
 from .result import EvaluationResult, KernelEvaluationResult, ReferenceTimingResult
+from .cuda_iterative_task import (
+    CudaIterativeOptimizationTask,
+    CudaIterativeEvaluationTask,
+    CudaIterativeResult,
+    CudaIterativeTrajectoryResult,
+)
 
 __all__ = [
     "EvaluationTask",
@@ -12,4 +18,8 @@ __all__ = [
     "EvaluationResult",
     "KernelEvaluationResult",
     "ReferenceTimingResult",
+    "CudaIterativeOptimizationTask",
+    "CudaIterativeEvaluationTask",
+    "CudaIterativeResult",
+    "CudaIterativeTrajectoryResult",
 ]

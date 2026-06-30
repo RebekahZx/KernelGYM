@@ -1,0 +1,51 @@
+Bootstrap: docker
+From: nvidia/cuda:12.6.3-devel-ubuntu22.04
+
+# Apptainer definition file — mirrors Dockerfile.trillium exactly.
+# Build with:
+#   apptainer build kernelgym-cuda-trillium.sif kernelgym-cuda-trillium.def
+#
+# Bootstrap: docker pulls from Docker Hub directly — no local Docker daemon
+# needed. Apptainer handles the OCI pull internally.
+#
+# Note on build location: building from nvidia/cuda + installing PyTorch +
+# transformers pulls ~6-8 GB and is CPU/memory intensive. If SciNet restricts
+# heavy builds on login nodes, run this from an interactive compute session
+# (salloc) instead. Check with SciNet docs or "salloc --nodes=1 --time=1:00:00".
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update && apt-get install -y \
+        python3-pip python3-dev git ninja-build \
+        && rm -rf /var/lib/apt/lists/*
+
+    pip3 install --upgrade pip
+
+    pip3 install \
+        torch==2.6.0 \
+        --index-url https://download.pytorch.org/whl/cu126
+
+    pip3 install \
+        numpy \
+        ninja \
+        pydantic \
+        "pydantic-settings==2.10.1"
+
+    pip3 install \
+        "transformers>=4.51.0" \
+        "accelerate>=0.30.0" \
+        "huggingface_hub>=0.23.0"
+
+%environment
+    export PYTHONPATH=/workspace
+    export DEBIAN_FRONTEND=noninteractive
+    # HF_HOME is set at runtime via --env or the SLURM script so the cache
+    # lands on $SCRATCH rather than the read-only $HOME on compute nodes.
+
+%runscript
+    exec "$@"
+
+%labels
+    CUDA 12.6.3
+    PyTorch 2.6.0+cu126
+    Description KernelGYM drkernel-14b eval environment for Trillium

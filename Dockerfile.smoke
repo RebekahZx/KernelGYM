@@ -1,0 +1,27 @@
+FROM nvidia/cuda:12.4.0-devel-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    python3-pip python3-dev git ninja-build \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --upgrade pip
+
+# PyTorch 2.4.1 with CUDA 12.4 wheels — matches the confirmed host
+# environment (nvidia-smi: CUDA 12.4.0, driver 592.27).
+RUN pip3 install \
+    torch==2.4.1 \
+    --index-url https://download.pytorch.org/whl/cu124
+
+# Minimal KernelGYM runtime deps (no verl, no redis, no celery needed for smoke test)
+RUN pip3 install \
+    numpy \
+    ninja \
+    pydantic \
+    "pydantic-settings==2.10.1"
+
+WORKDIR /workspace
+ENV PYTHONPATH=/workspace
+
+CMD ["bash"]

@@ -1,7 +1,6 @@
 #!/bin/bash
 # SLURM batch script — drkernel-14b full 8-problem eval on Trillium.
 #
-# BEFORE SUBMITTING — resolve the three FLAGs marked below.
 # Submit with:
 #   export HF_TOKEN=<your_token>
 #   sbatch scripts/run_drkernel14b_trillium.sh
@@ -16,24 +15,21 @@
 #SBATCH --error=/scratch/anavekar/logs/drkernel14b_%j.err
 
 # ---- Allocation -----------------------------------------------------------
-# FLAG 1: Replace with your actual allocation account.
-# On DRAC clusters this is usually "def-<pi_username>" or a sponsored account.
-# Check with: sacctmgr show associations user=$USER format=account
-#SBATCH --account=YOUR_ALLOCATION_ACCOUNT
+# rrg-mmehr has higher priority than def-mmehr for GPU jobs.
+# Switch to def-mmehr if rrg runs low on allocation.
+#SBATCH --account=rrg-mmehr
 
-# ---- Node request ---------------------------------------------------------
-# FLAG 2: Trillium whole-node vs per-GPU scheduling.
-# Per SciNet Trillium docs, GPU nodes are scheduled as whole units.
-# If that is correct, --nodes=1 gives you the entire node (typically 4x H100).
-# Do NOT also add --gres=gpu:N in whole-node mode — that will conflict.
-# Verify against: https://docs.scinet.utoronto.ca/index.php/Trillium
-# or run "scontrol show partition <name>" and check SelectType/SelectTypeParameters.
+# ---- Node/GPU request -----------------------------------------------------
+# Trillium compute partition: per-GPU scheduling (not whole-node).
+# drkernel-14b (14B bf16) = ~28GB — fits on a single H100 80GB.
+# Use gpu:h100:4 if you want all 4 GPUs on the node (faster for batch
+# inference but costs 4x allocation — not needed for greedy decoding).
 #SBATCH --nodes=1
-
-# FLAG 3: Partition name.
-# Trillium's GPU partition name is not confirmed here. Replace "gpu" with the
-# actual name shown in: sinfo -o "%P %a %l %G %D %N"
-#SBATCH --partition=gpu
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --gres=gpu:h100:1
+#SBATCH --mem=80G
+#SBATCH --partition=compute
 
 # ---------------------------------------------------------------------------
 set -euo pipefail
@@ -48,7 +44,7 @@ LOGS=$SCRATCH/logs
 mkdir -p "$RESULTS" "$HFCACHE" "$LOGS"
 
 # HF_TOKEN: must be set in the environment before sbatch.
-# Do NOT hardcode here — this file may end up in git.
+# Do NOT hardcode here — this file is in git.
 if [ -z "${HF_TOKEN:-}" ]; then
     echo "ERROR: HF_TOKEN is not set. Set it before sbatch:" >&2
     echo "  export HF_TOKEN=hf_..." >&2
@@ -61,6 +57,7 @@ module load cuda/12.6
 echo "========================================================"
 echo "  drkernel-14b eval — Trillium SLURM job $SLURM_JOB_ID"
 echo "  Node:    $SLURMD_NODENAME"
+echo "  GPU:     $(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null || echo 'n/a')"
 echo "  SIF:     $SIF"
 echo "  Repo:    $REPO"
 echo "  Results: $RESULTS"

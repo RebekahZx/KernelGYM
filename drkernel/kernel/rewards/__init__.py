@@ -13,5 +13,29 @@
 # limitations under the License.
 
 from kernel.rewards.kernel_reward import compute_kernel_reward_batch
+from kernel.rewards.iterative_cuda_reward import (
+    terminal_correctness_only,
+    per_turn_correctness_speedup,
+    compute_trloo_advantages,
+    apply_multi_turn_rejection_sampling,
+    apply_profiling_based_rejection_sampling,
+    compute_iterative_cuda_reward_batch,
+    extract_stop_decision,
+    extract_kernel_code,
+    build_turn_n_prompt_simple,
+    build_turn_n_prompt_with_history,
+)
 
-__all__ = ["compute_kernel_reward_batch"]
+__all__ = [
+    "compute_kernel_reward_batch",
+    "terminal_correctness_only",
+    "per_turn_correctness_speedup",
+    "compute_trloo_advantages",
+    "apply_multi_turn_rejection_sampling",
+    "apply_profiling_based_rejection_sampling",
+    "compute_iterative_cuda_reward_batch",
+    "extract_stop_decision",
+    "extract_kernel_code",
+    "build_turn_n_prompt_simple",
+    "build_turn_n_prompt_with_history",
+]

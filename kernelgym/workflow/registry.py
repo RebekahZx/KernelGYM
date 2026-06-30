@@ -8,11 +8,13 @@ from kernelgym.core import Registry
 
 from .kernelbench import KernelBenchWorkflowController
 from .kernel_simple import KernelSimpleWorkflowController
+from .cuda_iterative_optimize import CudaIterativeOptimizeWorkflowController
 from ..core.workflow import WorkflowController
 
 _WORKFLOW_REGISTRY = Registry()
 _WORKFLOW_REGISTRY.register("kernelbench", KernelBenchWorkflowController)
 _WORKFLOW_REGISTRY.register("kernel_simple", KernelSimpleWorkflowController)
+_WORKFLOW_REGISTRY.register("cuda_iterative_optimize", CudaIterativeOptimizeWorkflowController)
 
 
 def get_workflow_controller(name: str) -> WorkflowController:

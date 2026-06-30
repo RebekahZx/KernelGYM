@@ -1,2 +1,10 @@
 data/
 .claude/
+__pycache__/
+*.py[cod]
+*.pyo
+results/
+*.egg-info/
+.eggs/
+dist/
+build/

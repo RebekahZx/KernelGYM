@@ -19,6 +19,9 @@ def _ensure_default_toolkits() -> None:
     if "kernel_simple" not in items:
         from .kernel_simple.toolkit import KernelSimpleToolkit
         _TOOLKIT_REGISTRY.register("kernel_simple", KernelSimpleToolkit)
+    if "cuda_iterative" not in items:
+        from .cuda_iterative.toolkit import CudaIterativeToolkit
+        _TOOLKIT_REGISTRY.register("cuda_iterative", CudaIterativeToolkit)
 
 
 def get_toolkit(name: str) -> Toolkit:

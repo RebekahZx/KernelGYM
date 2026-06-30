@@ -8,9 +8,11 @@ from kernelgym.core import Registry
 
 from .base import Backend
 from .kernelbench import KernelBenchBackend
+from .cuda_iterative import CudaIterativeBackend
 
 _BACKEND_REGISTRY = Registry()
 _BACKEND_REGISTRY.register("kernelbench", KernelBenchBackend)
+_BACKEND_REGISTRY.register("cuda_iterative", CudaIterativeBackend)
 
 
 def get_backend(name: str) -> Backend:

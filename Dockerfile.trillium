@@ -1,0 +1,43 @@
+# Trillium (SciNet/DRAC) build — CUDA 12.6 to match available module.
+# Local 3060 build stays in Dockerfile.smoke (CUDA 12.4).
+#
+# PyTorch 2.6.0 + cu126: first stable minor release with cu126 wheels.
+# Verify wheel exists before building:
+#   pip index versions torch --index-url https://download.pytorch.org/whl/cu126
+#
+# Added vs Dockerfile.smoke:
+#   transformers + accelerate  -- required by load_model() (AutoModelForCausalLM,
+#                                  device_map="auto"); not needed for smoke tests
+#   huggingface_hub            -- explicit HF_TOKEN auth + cache control
+FROM nvidia/cuda:12.6.3-devel-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    python3-pip python3-dev git ninja-build \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --upgrade pip
+
+RUN pip3 install \
+    torch==2.6.0 \
+    --index-url https://download.pytorch.org/whl/cu126
+
+RUN pip3 install \
+    numpy \
+    ninja \
+    pydantic \
+    "pydantic-settings==2.10.1"
+
+# Model inference stack — drkernel-14b is Qwen3-14B; trust_remote_code=True
+# means transformers downloads and execs custom model code from HF Hub.
+# transformers>=4.51.0 is the first release with Qwen3 architecture support.
+# accelerate is required for device_map="auto" to work.
+RUN pip3 install \
+    "transformers>=4.51.0" \
+    "accelerate>=0.30.0" \
+    "huggingface_hub>=0.23.0"
+
+WORKDIR /workspace
+ENV PYTHONPATH=/workspace
+CMD ["bash"]

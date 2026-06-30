@@ -24,12 +24,14 @@
 # drkernel-14b (14B bf16) = ~28GB — fits on a single H100 80GB.
 # Use gpu:h100:4 if you want all 4 GPUs on the node (faster for batch
 # inference but costs 4x allocation — not needed for greedy decoding).
+# compute_full_node: whole-node allocation, 4x H100 80GB per node.
+# No --gres needed — you get all GPUs on the node with --nodes=1.
+# device_map="auto" in the eval script will spread the 14B model across them.
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --gres=gpu:1
 #SBATCH --mem=80G
-#SBATCH --partition=compute
+#SBATCH --partition=compute_full_node
 
 # ---------------------------------------------------------------------------
 set -euo pipefail

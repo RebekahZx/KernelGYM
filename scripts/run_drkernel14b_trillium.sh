@@ -17,21 +17,21 @@
 # ---- Allocation -----------------------------------------------------------
 # rrg-mmehr has higher priority than def-mmehr for GPU jobs.
 # Switch to def-mmehr if rrg runs low on allocation.
-#SBATCH --account=rrg-mmehr
+#SBATCH --account=rrg-mmehride
 
 # ---- Node/GPU request -----------------------------------------------------
 # Trillium compute partition: per-GPU scheduling (not whole-node).
 # drkernel-14b (14B bf16) = ~28GB — fits on a single H100 80GB.
 # Use gpu:h100:4 if you want all 4 GPUs on the node (faster for batch
 # inference but costs 4x allocation — not needed for greedy decoding).
-# compute_full_node: whole-node allocation, 4x H100 80GB per node.
-# No --gres needed — you get all GPUs on the node with --nodes=1.
-# device_map="auto" in the eval script will spread the 14B model across them.
+# Trillium GPU request: use --gpus-per-node (not --gres).
+# 14B model in bf16 = ~28GB — fits on a single H100 80GB.
+# Memory is automatic on Trillium (186GB per GPU) — do not set --mem.
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=80G
-#SBATCH --partition=compute_full_node
+#SBATCH --gpus-per-node=1
+#SBATCH --partition=compute
 
 # ---------------------------------------------------------------------------
 set -euo pipefail

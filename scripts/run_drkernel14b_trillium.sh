@@ -83,6 +83,7 @@ apptainer exec --nv \
     --bind "$HFCACHE":/hf_cache \
     --env HF_HOME=/hf_cache \
     --env HF_TOKEN="$HF_TOKEN" \
+    --env SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     "$SIF" \
     python3 /workspace/scripts/eval_real/run_drkernel14b_cuda_iterative.py
 

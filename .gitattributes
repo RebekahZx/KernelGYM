@@ -1,0 +1,6 @@
+# Force LF line endings on all platforms for files that run on Linux.
+*.sh        text eol=lf
+*.def       text eol=lf
+*.py        text eol=lf
+*.gitignore text eol=lf
+Makefile    text eol=lf

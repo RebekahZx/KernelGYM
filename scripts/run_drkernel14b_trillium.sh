@@ -45,11 +45,14 @@ LOGS=$SCRATCH/logs
 
 mkdir -p "$RESULTS" "$HFCACHE" "$LOGS"
 
-# HF_TOKEN: must be set in the environment before sbatch.
-# Do NOT hardcode here — this file is in git.
-if [ -z "${HF_TOKEN:-}" ]; then
-    echo "ERROR: HF_TOKEN is not set. Set it before sbatch:" >&2
-    echo "  export HF_TOKEN=hf_..." >&2
+# HF_TOKEN: Trillium's SLURM wrapper injects --export=NONE so environment
+# variables don't survive into the job. Read from a file instead.
+# Create it once on the login node:
+#   echo "hf_..." > /scratch/anavekar/.hf_token && chmod 600 /scratch/anavekar/.hf_token
+HF_TOKEN=$(cat /scratch/anavekar/.hf_token 2>/dev/null)
+if [ -z "$HF_TOKEN" ]; then
+    echo "ERROR: /scratch/anavekar/.hf_token not found or empty." >&2
+    echo "  echo 'hf_...' > /scratch/anavekar/.hf_token && chmod 600 /scratch/anavekar/.hf_token" >&2
     exit 1
 fi
 

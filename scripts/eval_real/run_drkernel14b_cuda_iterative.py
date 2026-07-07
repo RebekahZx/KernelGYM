@@ -799,10 +799,9 @@ async def evaluate_problem(
             break
 
         if not latest_turn.get("correctness", False):
-            # Distinguish: did the code fail to compile, or compile-but-wrong?
+            # Note compile failures but keep iterating — model gets all max_turns
             if not extraction_failed and not latest_turn.get("compiled", True):
                 ended_via_compile_failure = True
-            break
 
         if turn >= max_turns:
             ended_via_max_turns_cap = True

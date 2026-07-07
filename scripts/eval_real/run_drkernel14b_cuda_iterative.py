@@ -224,11 +224,22 @@ import torch.nn as nn
 from torch.utils.cpp_extension import load_inline
 
 _src = \"\"\"
+#include <torch/extension.h>
+
 __global__ void vec_add_k(const float* __restrict__ a,
                            const float* __restrict__ b,
                            float* __restrict__ c, int n) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < n) c[i] = a[i] + b[i];
+}
+
+torch::Tensor vec_add(torch::Tensor a, torch::Tensor b) {
+    auto c = torch::empty_like(a);
+    int n = a.numel();
+    const int t = 256;
+    vec_add_k<<<(n + t - 1) / t, t>>>(
+        a.data_ptr<float>(), b.data_ptr<float>(), c.data_ptr<float>(), n);
+    return c;
 }
 \"\"\"
 
@@ -236,14 +247,10 @@ class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
         self._ext = load_inline(name="p01_vec_add", cpp_sources="",
-                                cuda_sources=_src, functions=["vec_add_k"],
+                                cuda_sources=_src, functions=["vec_add"],
                                 verbose=False)
     def forward(self, a, b):
-        out = torch.empty_like(a)
-        n = a.numel()
-        t = 256
-        self._ext.vec_add_k(a, b, out, n, block=(t,), grid=((n + t - 1) // t,))
-        return out
+        return self._ext.vec_add(a, b)
 
 def get_init_inputs(): return []
 def get_inputs():
@@ -262,10 +269,20 @@ import torch.nn as nn
 from torch.utils.cpp_extension import load_inline
 
 _src = \"\"\"
+#include <torch/extension.h>
+
 __global__ void relu_k(const float* __restrict__ x,
                         float* __restrict__ y, int n) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < n) y[i] = x[i] > 0.f ? x[i] : 0.f;
+}
+
+torch::Tensor relu_fwd(torch::Tensor x) {
+    auto y = torch::empty_like(x);
+    int n = x.numel();
+    const int t = 256;
+    relu_k<<<(n + t - 1) / t, t>>>(x.data_ptr<float>(), y.data_ptr<float>(), n);
+    return y;
 }
 \"\"\"
 
@@ -273,14 +290,10 @@ class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
         self._ext = load_inline(name="p02_relu", cpp_sources="",
-                                cuda_sources=_src, functions=["relu_k"],
+                                cuda_sources=_src, functions=["relu_fwd"],
                                 verbose=False)
     def forward(self, x):
-        out = torch.empty_like(x)
-        n = x.numel()
-        t = 256
-        self._ext.relu_k(x, out, n, block=(t,), grid=((n + t - 1) // t,))
-        return out
+        return self._ext.relu_fwd(x)
 
 def get_init_inputs(): return []
 def get_inputs():
@@ -297,6 +310,8 @@ import torch.nn as nn
 from torch.utils.cpp_extension import load_inline
 
 _src = \"\"\"
+#include <torch/extension.h>
+
 __global__ void add_bias_k(const float* __restrict__ x,
                              const float* __restrict__ b,
                              float* __restrict__ out,
@@ -306,21 +321,26 @@ __global__ void add_bias_k(const float* __restrict__ x,
     if (r < rows && c < cols)
         out[r * cols + c] = x[r * cols + c] + b[c];
 }
+
+torch::Tensor add_bias(torch::Tensor x, torch::Tensor bias) {
+    int rows = x.size(0), cols = x.size(1);
+    auto out = torch::empty_like(x);
+    const int t = 256;
+    dim3 grid(rows, (cols + t - 1) / t);
+    add_bias_k<<<grid, t>>>(
+        x.data_ptr<float>(), bias.data_ptr<float>(), out.data_ptr<float>(), rows, cols);
+    return out;
+}
 \"\"\"
 
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
         self._ext = load_inline(name="p03_add_bias", cpp_sources="",
-                                cuda_sources=_src, functions=["add_bias_k"],
+                                cuda_sources=_src, functions=["add_bias"],
                                 verbose=False)
     def forward(self, x, bias):
-        rows, cols = x.shape
-        out = torch.empty_like(x)
-        t = 256
-        cb = (cols + t - 1) // t
-        self._ext.add_bias_k(x, bias, out, rows, cols, block=(t,), grid=(rows, cb))
-        return out
+        return self._ext.add_bias(x, bias)
 
 def get_init_inputs(): return []
 def get_inputs():
@@ -339,7 +359,9 @@ import torch.nn as nn
 from torch.utils.cpp_extension import load_inline
 
 _src = \"\"\"
+#include <torch/extension.h>
 #include <math.h>
+
 __global__ void gelu_k(const float* __restrict__ x,
                         float* __restrict__ y, int n) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -349,20 +371,24 @@ __global__ void gelu_k(const float* __restrict__ x,
         y[i] = 0.5f * v * (1.f + tanhf(c));
     }
 }
+
+torch::Tensor gelu_fwd(torch::Tensor x) {
+    auto y = torch::empty_like(x);
+    int n = x.numel();
+    const int t = 256;
+    gelu_k<<<(n + t - 1) / t, t>>>(x.data_ptr<float>(), y.data_ptr<float>(), n);
+    return y;
+}
 \"\"\"
 
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
         self._ext = load_inline(name="p04_gelu", cpp_sources="",
-                                cuda_sources=_src, functions=["gelu_k"],
+                                cuda_sources=_src, functions=["gelu_fwd"],
                                 verbose=False)
     def forward(self, x):
-        out = torch.empty_like(x)
-        n = x.numel()
-        t = 256
-        self._ext.gelu_k(x, out, n, block=(t,), grid=((n + t - 1) // t,))
-        return out
+        return self._ext.gelu_fwd(x)
 
 def get_init_inputs(): return []
 def get_inputs():
@@ -379,6 +405,8 @@ import torch.nn as nn
 from torch.utils.cpp_extension import load_inline
 
 _src = \"\"\"
+#include <torch/extension.h>
+
 __global__ void transpose_k(const float* __restrict__ in,
                               float* __restrict__ out,
                               int rows, int cols) {
@@ -387,22 +415,26 @@ __global__ void transpose_k(const float* __restrict__ in,
     if (r < rows && c < cols)
         out[c * rows + r] = in[r * cols + c];
 }
+
+torch::Tensor transpose_fwd(torch::Tensor x) {
+    int rows = x.size(0), cols = x.size(1);
+    auto out = torch::empty({cols, rows}, x.options());
+    const int t = 16;
+    dim3 block(t, t);
+    dim3 grid((cols + t - 1) / t, (rows + t - 1) / t);
+    transpose_k<<<grid, block>>>(x.data_ptr<float>(), out.data_ptr<float>(), rows, cols);
+    return out;
+}
 \"\"\"
 
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
         self._ext = load_inline(name="p05_transpose", cpp_sources="",
-                                cuda_sources=_src, functions=["transpose_k"],
+                                cuda_sources=_src, functions=["transpose_fwd"],
                                 verbose=False)
     def forward(self, x):
-        rows, cols = x.shape
-        out = torch.empty(cols, rows, device=x.device, dtype=x.dtype)
-        t = 16
-        self._ext.transpose_k(x, out, rows, cols,
-                               block=(t, t), grid=((cols + t - 1) // t,
-                                                    (rows + t - 1) // t))
-        return out
+        return self._ext.transpose_fwd(x)
 
 def get_init_inputs(): return []
 def get_inputs():
@@ -419,6 +451,8 @@ import torch.nn as nn
 from torch.utils.cpp_extension import load_inline
 
 _src = \"\"\"
+#include <torch/extension.h>
+
 __global__ void elwise_mul_k(const float* __restrict__ a,
                                const float* __restrict__ b,
                                float* __restrict__ c,
@@ -426,20 +460,25 @@ __global__ void elwise_mul_k(const float* __restrict__ a,
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < n) c[i] = a[i] * b[i] * scale;
 }
+
+torch::Tensor elwise_mul(torch::Tensor a, torch::Tensor b, float scale) {
+    auto c = torch::empty_like(a);
+    int n = a.numel();
+    const int t = 256;
+    elwise_mul_k<<<(n + t - 1) / t, t>>>(
+        a.data_ptr<float>(), b.data_ptr<float>(), c.data_ptr<float>(), scale, n);
+    return c;
+}
 \"\"\"
 
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
         self._ext = load_inline(name="p06_elwise_mul", cpp_sources="",
-                                cuda_sources=_src, functions=["elwise_mul_k"],
+                                cuda_sources=_src, functions=["elwise_mul"],
                                 verbose=False)
     def forward(self, a, b):
-        out = torch.empty_like(a)
-        n = a.numel()
-        t = 256
-        self._ext.elwise_mul_k(a, b, out, 0.5, n, block=(t,), grid=((n + t - 1) // t,))
-        return out
+        return self._ext.elwise_mul(a, b, 0.5)
 
 def get_init_inputs(): return []
 def get_inputs():
@@ -458,7 +497,9 @@ import torch.nn as nn
 from torch.utils.cpp_extension import load_inline
 
 _src = \"\"\"
+#include <torch/extension.h>
 #include <float.h>
+
 // One warp per row (blockDim.x == 32). Works for cols up to 32*any_int.
 __global__ void softmax_k(const float* __restrict__ x,
                             float* __restrict__ y,
@@ -487,19 +528,23 @@ __global__ void softmax_k(const float* __restrict__ x,
     for (int c = threadIdx.x; c < cols; c += blockDim.x)
         ry[c] /= sm;
 }
+
+torch::Tensor softmax_fwd(torch::Tensor x) {
+    int rows = x.size(0), cols = x.size(1);
+    auto y = torch::empty_like(x);
+    softmax_k<<<rows, 32>>>(x.data_ptr<float>(), y.data_ptr<float>(), rows, cols);
+    return y;
+}
 \"\"\"
 
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
         self._ext = load_inline(name="p07_softmax", cpp_sources="",
-                                cuda_sources=_src, functions=["softmax_k"],
+                                cuda_sources=_src, functions=["softmax_fwd"],
                                 verbose=False)
     def forward(self, x):
-        rows, cols = x.shape
-        out = torch.empty_like(x)
-        self._ext.softmax_k(x, out, rows, cols, block=(32,), grid=(rows,))
-        return out
+        return self._ext.softmax_fwd(x)
 
 def get_init_inputs(): return []
 def get_inputs():
@@ -516,7 +561,9 @@ import torch.nn as nn
 from torch.utils.cpp_extension import load_inline
 
 _src = \"\"\"
+#include <torch/extension.h>
 #include <math.h>
+
 // One warp per row (blockDim.x == 32). Works for cols up to 32*any_int.
 __global__ void layer_norm_k(const float* __restrict__ x,
                                const float* __restrict__ w,
@@ -545,20 +592,26 @@ __global__ void layer_norm_k(const float* __restrict__ x,
     for (int c = threadIdx.x; c < cols; c += blockDim.x)
         ry[c] = (rx[c] - mean) * inv_std * w[c] + b[c];
 }
+
+torch::Tensor layer_norm_fwd(torch::Tensor x, torch::Tensor weight, torch::Tensor bias,
+                              float eps) {
+    int rows = x.size(0), cols = x.size(1);
+    auto y = torch::empty_like(x);
+    layer_norm_k<<<rows, 32>>>(
+        x.data_ptr<float>(), weight.data_ptr<float>(), bias.data_ptr<float>(),
+        y.data_ptr<float>(), rows, cols, eps);
+    return y;
+}
 \"\"\"
 
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
         self._ext = load_inline(name="p08_layer_norm", cpp_sources="",
-                                cuda_sources=_src, functions=["layer_norm_k"],
+                                cuda_sources=_src, functions=["layer_norm_fwd"],
                                 verbose=False)
     def forward(self, x, weight, bias):
-        rows, cols = x.shape
-        out = torch.empty_like(x)
-        self._ext.layer_norm_k(x, weight, bias, out, rows, cols, 1e-5,
-                                block=(32,), grid=(rows,))
-        return out
+        return self._ext.layer_norm_fwd(x, weight, bias, 1e-5)
 
 def get_init_inputs(): return []
 def get_inputs():

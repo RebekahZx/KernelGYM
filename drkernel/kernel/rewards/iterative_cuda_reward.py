@@ -531,9 +531,9 @@ def build_turn_n_prompt_with_history(
     prompt_parts.append(f"# CUDA Kernel Optimization - Full Trajectory (Turn {current_turn})")
     prompt_parts.append("")
 
-    # Original kernel
+    # Original kernel — shown as Python (it is a Python module with load_inline)
     prompt_parts.append("## Original Kernel (Turn 0)")
-    prompt_parts.append("```cuda")
+    prompt_parts.append("```python")
     prompt_parts.append(initial_kernel)
     prompt_parts.append("```")
     _rt0 = turn_0_metrics.get('kernel_runtime')
@@ -541,7 +541,7 @@ def build_turn_n_prompt_with_history(
     prompt_parts.append("")
 
     # Full history with cumulative metrics
-    if turn_history:
+    if len(turn_history) > 1:
         prompt_parts.append("## Optimization Trajectory")
         best_speedup = 1.0
         for i, turn in enumerate(turn_history[1:], start=1):  # Skip turn 0
@@ -560,13 +560,16 @@ def build_turn_n_prompt_with_history(
             if speedup != 1.0:
                 prompt_parts.append(f"**Speedup:** {speedup:.2f}x")
 
-            if turn.get("feedback"):
-                prompt_parts.append(f"**Feedback:** {turn['feedback']}")
+            err = turn.get("error_message")
+            if err:
+                prompt_parts.append(f"**Error:** {err[:300]}")
 
-            prompt_parts.append("**Code:**")
-            prompt_parts.append("```cuda")
-            prompt_parts.append(turn.get("kernel_code", "")[:500])  # First 500 chars
-            prompt_parts.append("```")
+            kernel_code = turn.get("kernel_code", "")
+            if kernel_code:
+                prompt_parts.append("**Code:**")
+                prompt_parts.append("```python")
+                prompt_parts.append(kernel_code[:800])
+                prompt_parts.append("```")
             prompt_parts.append("")
 
         prompt_parts.append(f"## Summary")
@@ -574,41 +577,42 @@ def build_turn_n_prompt_with_history(
         prompt_parts.append(f"- Best speedup achieved: {best_speedup:.2f}x")
         prompt_parts.append("")
 
-    # Current best kernel
-    if turn_history:
-        best_correct_turn = None
-        best_speedup_turn = 1.0
-        for turn in turn_history:
-            if turn.get("correctness", False):
-                if (turn.get("speedup", 1.0) or 1.0) > best_speedup_turn:
-                    best_speedup_turn = turn.get("speedup", 1.0) or 1.0
-                    best_correct_turn = turn
-
-        if best_correct_turn and best_correct_turn != turn_history[0]:
-            prompt_parts.append("## Current Best Kernel")
-            prompt_parts.append("```cuda")
-            prompt_parts.append(best_correct_turn.get("kernel_code", ""))
-            prompt_parts.append("```")
-            prompt_parts.append("")
-
     # Task description
-    prompt_parts.append("## Next Step")
-    prompt_parts.append(f"You are on turn {current_turn}. Make exactly ONE atomic optimization:")
-    prompt_parts.append("- Analyze the current best kernel's bottlenecks")
-    prompt_parts.append("- Choose ONE transformation: shared memory, unrolling, coalescing, etc.")
-    prompt_parts.append("- Ensure output is still correct")
+    prompt_parts.append("## Your Task (Turn {})".format(current_turn))
+    prompt_parts.append("Produce an optimized version of the kernel above.")
+    prompt_parts.append("- Make one clear improvement (e.g. shared memory, coalescing, unrolling, float4 loads)")
+    prompt_parts.append("- Preserve numerical correctness")
     prompt_parts.append("")
 
-    prompt_parts.append("## Your Decision")
-    prompt_parts.append("After your optimized kernel, add:")
-    prompt_parts.append("- `# OPTIMIZATION_CONTINUE` if more improvements are possible")
-    prompt_parts.append("- `# OPTIMIZATION_STOP` if optimization is complete")
+    prompt_parts.append("## REQUIRED OUTPUT FORMAT")
+    prompt_parts.append("Output the COMPLETE Python module — imports, CUDA source string, ModelNew class,")
+    prompt_parts.append("get_init_inputs(), get_inputs(). Do NOT output raw CUDA alone.")
     prompt_parts.append("")
-
-    prompt_parts.append("## Format")
-    prompt_parts.append("```cuda")
-    prompt_parts.append("// Your optimized kernel here")
+    prompt_parts.append("```python")
+    prompt_parts.append("import torch")
+    prompt_parts.append("import torch.nn as nn")
+    prompt_parts.append("from torch.utils.cpp_extension import load_inline")
+    prompt_parts.append("")
+    prompt_parts.append("_src = \"\"\"")
+    prompt_parts.append("// ... your optimized CUDA kernel(s) ...")
+    prompt_parts.append("\"\"\"")
+    prompt_parts.append("")
+    prompt_parts.append("class ModelNew(nn.Module):")
+    prompt_parts.append("    def __init__(self):")
+    prompt_parts.append("        super().__init__()")
+    prompt_parts.append("        self._ext = load_inline(name=\"...\", cpp_sources=\"\",")
+    prompt_parts.append("                                cuda_sources=_src, functions=[\"...\"],")
+    prompt_parts.append("                                verbose=False)")
+    prompt_parts.append("    def forward(self, ...):")
+    prompt_parts.append("        ...")
+    prompt_parts.append("")
+    prompt_parts.append("def get_init_inputs(): return []")
+    prompt_parts.append("def get_inputs(): ...")
     prompt_parts.append("```")
+    prompt_parts.append("")
+    prompt_parts.append("Then add your decision on the next line:")
+    prompt_parts.append("# OPTIMIZATION_CONTINUE")
+    prompt_parts.append("or")
     prompt_parts.append("# OPTIMIZATION_STOP")
 
     return "\n".join(prompt_parts)

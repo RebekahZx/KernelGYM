@@ -91,6 +91,8 @@ apptainer exec --nv \
     --env SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     --env TRANSFORMERS_OFFLINE=1 \
     --env HF_HUB_OFFLINE=1 \
+    --env CUDA_HOME=/usr/local/cuda \
+    --env CUDA_PATH=/usr/local/cuda \
     "$SIF" \
     python3 /workspace/scripts/eval_real/run_drkernel14b_cuda_iterative.py
 

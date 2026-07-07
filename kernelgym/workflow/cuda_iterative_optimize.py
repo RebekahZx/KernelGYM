@@ -249,10 +249,6 @@ class CudaIterativeOptimizeWorkflowController(WorkflowController):
         if "STOP" in continue_marker.upper():
             return True
 
-        # Safeguard: stop if kernel became incorrect
-        if not eval_result.get("correctness", False):
-            return True
-
         # Max turns check is done at higher level, but double-check
         if current_turn >= max_turns - 1:
             return True

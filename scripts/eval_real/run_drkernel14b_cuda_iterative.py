@@ -246,7 +246,8 @@ torch::Tensor vec_add(torch::Tensor a, torch::Tensor b) {
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
-        self._ext = load_inline(name="p01_vec_add", cpp_sources="",
+        self._ext = load_inline(name="p01_vec_add",
+                                cpp_sources="#include <torch/extension.h>\ntorch::Tensor vec_add(torch::Tensor a, torch::Tensor b);",
                                 cuda_sources=_src, functions=["vec_add"],
                                 verbose=False)
     def forward(self, a, b):
@@ -289,7 +290,8 @@ torch::Tensor relu_fwd(torch::Tensor x) {
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
-        self._ext = load_inline(name="p02_relu", cpp_sources="",
+        self._ext = load_inline(name="p02_relu",
+                                cpp_sources="#include <torch/extension.h>\ntorch::Tensor relu_fwd(torch::Tensor x);",
                                 cuda_sources=_src, functions=["relu_fwd"],
                                 verbose=False)
     def forward(self, x):
@@ -336,7 +338,8 @@ torch::Tensor add_bias(torch::Tensor x, torch::Tensor bias) {
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
-        self._ext = load_inline(name="p03_add_bias", cpp_sources="",
+        self._ext = load_inline(name="p03_add_bias",
+                                cpp_sources="#include <torch/extension.h>\ntorch::Tensor add_bias(torch::Tensor x, torch::Tensor bias);",
                                 cuda_sources=_src, functions=["add_bias"],
                                 verbose=False)
     def forward(self, x, bias):
@@ -384,7 +387,8 @@ torch::Tensor gelu_fwd(torch::Tensor x) {
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
-        self._ext = load_inline(name="p04_gelu", cpp_sources="",
+        self._ext = load_inline(name="p04_gelu",
+                                cpp_sources="#include <torch/extension.h>\ntorch::Tensor gelu_fwd(torch::Tensor x);",
                                 cuda_sources=_src, functions=["gelu_fwd"],
                                 verbose=False)
     def forward(self, x):
@@ -430,7 +434,8 @@ torch::Tensor transpose_fwd(torch::Tensor x) {
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
-        self._ext = load_inline(name="p05_transpose", cpp_sources="",
+        self._ext = load_inline(name="p05_transpose",
+                                cpp_sources="#include <torch/extension.h>\ntorch::Tensor transpose_fwd(torch::Tensor x);",
                                 cuda_sources=_src, functions=["transpose_fwd"],
                                 verbose=False)
     def forward(self, x):
@@ -474,7 +479,8 @@ torch::Tensor elwise_mul(torch::Tensor a, torch::Tensor b, float scale) {
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
-        self._ext = load_inline(name="p06_elwise_mul", cpp_sources="",
+        self._ext = load_inline(name="p06_elwise_mul",
+                                cpp_sources="#include <torch/extension.h>\ntorch::Tensor elwise_mul(torch::Tensor a, torch::Tensor b, float scale);",
                                 cuda_sources=_src, functions=["elwise_mul"],
                                 verbose=False)
     def forward(self, a, b):
@@ -540,7 +546,8 @@ torch::Tensor softmax_fwd(torch::Tensor x) {
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
-        self._ext = load_inline(name="p07_softmax", cpp_sources="",
+        self._ext = load_inline(name="p07_softmax",
+                                cpp_sources="#include <torch/extension.h>\ntorch::Tensor softmax_fwd(torch::Tensor x);",
                                 cuda_sources=_src, functions=["softmax_fwd"],
                                 verbose=False)
     def forward(self, x):
@@ -607,7 +614,8 @@ torch::Tensor layer_norm_fwd(torch::Tensor x, torch::Tensor weight, torch::Tenso
 class ModelNew(nn.Module):
     def __init__(self):
         super().__init__()
-        self._ext = load_inline(name="p08_layer_norm", cpp_sources="",
+        self._ext = load_inline(name="p08_layer_norm",
+                                cpp_sources="#include <torch/extension.h>\ntorch::Tensor layer_norm_fwd(torch::Tensor x, torch::Tensor weight, torch::Tensor bias, float eps);",
                                 cuda_sources=_src, functions=["layer_norm_fwd"],
                                 verbose=False)
     def forward(self, x, weight, bias):

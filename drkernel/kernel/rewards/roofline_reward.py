@@ -121,7 +121,9 @@ _GB = 1.0e9       # 1 GB/s   in bytes/s
 # Each entry: (required lowercase substrings that must ALL appear in the device
 # name) -> RooflineSpecs. Order matters: more specific names first.
 _GPU_ROOFLINE_TABLE = [
-    (("a100",),                    RooflineSpecs(312 * _TFLOP, 2039 * _GB, "A100 80GB", "fp32")),
+    # 312 TFLOP/s is the A100's dense BF16/FP16 tensor-core peak (FP32 non-tensor
+    # is ~19.5 TFLOP/s), so the dtype label is bf16, matching the H100 entry.
+    (("a100",),                    RooflineSpecs(312 * _TFLOP, 2039 * _GB, "A100 80GB", "bf16")),
     (("h100",),                    RooflineSpecs(989 * _TFLOP, 3.35 * _TB, "H100 SXM", "bf16")),
     (("rtx", "3060", "laptop"),    RooflineSpecs(101 * _TFLOP, 336 * _GB, "RTX 3060 Laptop", "fp16")),
     (("rtx", "5090"),              RooflineSpecs(838 * _TFLOP, 1.79 * _TB, "RTX 5090", "fp16")),

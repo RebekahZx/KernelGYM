@@ -1,3 +1,31 @@
+> ## About this fork
+>
+> This is a fork of [KernelGYM](https://github.com/hkust-nlp/KernelGYM) by
+> HKUST-NLP, the environment from the Dr. Kernel paper
+> ([arXiv:2602.05885](https://arxiv.org/abs/2602.05885)), released under
+> Apache-2.0. Everything below the line is the upstream README.
+>
+> **What this fork adds** (Shrinivas Anavekar, June–July 2026; full list in
+> [`CONTRIBUTIONS.md`](CONTRIBUTIONS.md)):
+>
+> - **`cuda_iterative` workflow**: a multi-turn CUDA kernel optimisation loop in
+>   which the model decides CONTINUE/STOP each turn, implemented as a new
+>   backend, task schema, toolkit and workflow controller registered with
+>   KernelGYM, plus its reward module.
+> - **Roofline-aware terminal reward**: rewards progress toward the hardware
+>   ceiling (roofline efficiency) rather than raw speedup, so a low-intensity
+>   kernel cannot game the signal by doing less work. Standalone module with a
+>   GPU spec table and 14 unit tests that run without a GPU or torch.
+> - **HPC deployment**: Apptainer/Docker definitions and SLURM scripts for
+>   running on the Trillium cluster (offline model loading, SSL inside the
+>   container, partition/GPU directives), plus evaluation and smoke-test scripts.
+>
+> ```bash
+> pip install pytest && python -m pytest -q tests   # roofline reward tests (CPU-only)
+> ```
+
+---
+
 # KernelGYM: A Gym for Kernel Generations
 
 [![Dataset](https://img.shields.io/badge/🤗%20Dataset-yellow)](https://huggingface.co/collections/hkust-nlp/drkernel)

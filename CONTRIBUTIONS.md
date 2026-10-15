@@ -3,28 +3,28 @@
 Upstream: [hkust-nlp/KernelGYM](https://github.com/hkust-nlp/KernelGYM) (Apache-2.0).
 Everything listed here was added in this fork by Shrinivas Anavekar; all other
 files are upstream. Generated from `git log` / `git diff --stat` against the
-upstream snapshot (commit `3a84417`).
+upstream snapshot (commit `49e5bd1`).
 
 ## Commits
 
 | Date | Commit | Change |
 |---|---|---|
-| 2026-06-30 | `5390e36` | add cuda_iterative pipeline, eval scripts, and Trillium build files |
-| 2026-06-30 | `108d3d4` | finalize SLURM script with Trillium partition/account/GPU directives |
-| 2026-06-30 | `620751b` | fix SSL_CERT_FILE inside Apptainer container on Trillium |
-| 2026-06-30 | `cb3da9b` | add .gitattributes to enforce LF line endings for shell/Python/def files |
-| 2026-06-30 | `8087c1e` | fix --gres format: gpu:1 not gpu:h100:1 (type qualifier unsupported on Trillium) |
-| 2026-06-30 | `f428d1d` | switch to compute_full_node partition, drop --gres |
-| 2026-06-30 | `b5659cb` | fix Trillium SLURM directives: gpus-per-node, account name, drop mem |
-| 2026-07-02 | `54e3f52` | read HF_TOKEN from file, not env (Trillium injects --export=NONE) |
-| 2026-07-06 | `39365a8` | set TRANSFORMERS_OFFLINE=1 and HF_HUB_OFFLINE=1 for compute nodes |
-| 2026-07-07 | `53953ac` | fix: give model all max_turns instead of stopping after first failure |
-| 2026-07-07 | `7a4fe37` | add diagnostic script for raw result error messages |
-| 2026-07-07 | `9fe6fc7` | fix: CUDA_HOME env override + prompt format for ModelNew output |
-| 2026-07-07 | `6c6eee3` | fix: rewrite all 8 reference kernels to use C++ launchers |
-| 2026-07-07 | `ef402f5` | fix: add forward declarations to cpp_sources for all 8 reference kernels |
-| 2026-07-10 | `e1c3b03` | fix: escape \n in cpp_sources string literals for all 8 reference kernels |
-| 2026-07-13 | `31238b7` | feat: roofline-aware terminal reward (novel contribution) |
+| 2026-06-30 | `cc991ee` | add cuda_iterative pipeline, eval scripts, and Trillium build files |
+| 2026-06-30 | `90790e8` | finalize SLURM script with Trillium partition/account/GPU directives |
+| 2026-06-30 | `0d72c42` | fix SSL_CERT_FILE inside Apptainer container on Trillium |
+| 2026-06-30 | `f29db9a` | add .gitattributes to enforce LF line endings for shell/Python/def files |
+| 2026-06-30 | `8b1e60e` | fix --gres format: gpu:1 not gpu:h100:1 (type qualifier unsupported on Trillium) |
+| 2026-06-30 | `bd42aeb` | switch to compute_full_node partition, drop --gres |
+| 2026-06-30 | `6706ea9` | fix Trillium SLURM directives: gpus-per-node, account name, drop mem |
+| 2026-07-02 | `cbc3a12` | read HF_TOKEN from file, not env (Trillium injects --export=NONE) |
+| 2026-07-06 | `5b79a46` | set TRANSFORMERS_OFFLINE=1 and HF_HUB_OFFLINE=1 for compute nodes |
+| 2026-07-07 | `602b7fd` | fix: give model all max_turns instead of stopping after first failure |
+| 2026-07-07 | `322b1c9` | add diagnostic script for raw result error messages |
+| 2026-07-07 | `0c02b83` | fix: CUDA_HOME env override + prompt format for ModelNew output |
+| 2026-07-07 | `70970ad` | fix: rewrite all 8 reference kernels to use C++ launchers |
+| 2026-07-07 | `6fb8caa` | fix: add forward declarations to cpp_sources for all 8 reference kernels |
+| 2026-07-10 | `a437f38` | fix: escape \n in cpp_sources string literals for all 8 reference kernels |
+| 2026-07-13 | `79cc53c` | feat: roofline-aware terminal reward (novel contribution) |
 
 ## Files added or changed
 
